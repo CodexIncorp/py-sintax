@@ -1,9 +1,6 @@
 #pragma once
-// gramatica.h — La gramática LL(1) ya sin recursividad por la izquierda:
-// no terminales, producciones numeradas (1-56) y tabla de análisis M.
-// Es la transcripción directa de las actividades 4.1 y 4.3 del reporte.
-// (Generado a partir de la gramática y verificado contra un cálculo independiente
-//  de PRIMERO/SIGUIENTE: 114 celdas, 0 conflictos LL(1).)
+// gramatica.h — Gramática LL(1) sin recursividad por la izquierda:
+// Transcripción de las actividades 4.1 y 4.3 (0 conflictos LL(1)).
 
 #include <array>
 #include <cstdint>
@@ -12,48 +9,27 @@
 
 #include "tokens.h"
 
-/// @brief No terminales. Son las filas de la tabla M.
+// No terminales (filas de la tabla M).
 enum NoTerm : uint8_t
 {
-    NT_PROG,
-    NT_SENT,
-    NT_VAL,
-    NT_LLAM,
-    NT_O,
-    NT_FN,
-    NT_P,
-    NT_PP,
-    NT_I,
-    NT_L,
-    NT_LP,
-    NT_E,
-    NT_EP,
-    NT_A,
-    NT_AP,
-    NT_T,
-    NT_TP,
-    NT_U,
-    NT_POT,
-    NT_POTP,
-    NT_F,
-    NT_PAR,
-    NT_COLA,
-    NT_RESTO,
-    NT_BLOQUE, // cuerpo de def: return E | pass
-    N_NOTERM
+    NT_PROG, NT_SENT, NT_VAL, NT_LLAM, NT_O, NT_FN, NT_P, NT_PP, NT_I, NT_L, NT_LP,
+    NT_E, NT_EP, NT_A, NT_AP, NT_T, NT_TP, NT_U, NT_POT, NT_POTP, NT_F, NT_PAR,
+    NT_COLA, NT_RESTO, NT_BLOQUE, N_NOTERM
 };
 
 inline constexpr const char *NOMBRE_NT[N_NOTERM] = {
-    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", "A", "A'", "T", "T'", "U", "Pot", "Pot'", "F", "Par", "Cola", "Resto", "Bloque"};
+    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", 
+    "A", "A'", "T", "T'", "U", "Pot", "Pot'", "F", "Par", "Cola", "Resto", "Bloque"
+};
 
-/// @brief Símbolo de una producción: terminal o no terminal.
+// Símbolo de la gramática.
 struct Simbolo
 {
     bool esTerm;
     uint8_t id; // Term si esTerm, NoTerm si no
 };
 
-/// @brief Producción izq → der. Una parte derecha vacía es ε.
+// Producción de la gramática (izq → der).
 struct Produccion
 {
     NoTerm izq;
@@ -63,10 +39,9 @@ struct Produccion
 constexpr Simbolo term(Term t) { return {true, t}; }
 constexpr Simbolo nt(NoTerm n) { return {false, n}; }
 
-/// @brief Producciones. El índice es el número de la producción en el reporte (1-56).
-/// El índice 0 es un relleno: en M, el valor 0 significa "celda vacía" (error).
+// Producciones numeradas (1-56). El índice 0 es marcador de celda vacía (error).
 inline const std::vector<Produccion> PROD = {
-    /*  0 */ {NT_PROG, {}}, // relleno, no es una producción real
+    /*  0 */ {NT_PROG, {}},
     /*  1 */ {NT_PROG, {nt(NT_SENT), nt(NT_PROG)}},
     /*  2 */ {NT_PROG, {}},
     /*  3 */ {NT_SENT, {term(T_ID), term(T_ASIG), nt(NT_VAL), term(T_NEWLINE)}},
@@ -125,18 +100,15 @@ inline const std::vector<Produccion> PROD = {
     /* 56 */ {NT_BLOQUE, {term(T_PASS)}},
 };
 
-/// @brief Tabla de análisis: M[no terminal][terminal] = número de producción (0 = error).
+// Tabla de análisis predictivo: M[NoTerm][Term] = núm. producción.
 using TablaM = std::array<std::array<uint8_t, N_TERM>, N_NOTERM>;
 
-/// @brief Llena M igual que la tabla de la actividad 4.3: cada línea es "no terminal,
-/// terminales de entrada, producción a aplicar". Un ε se aplica con SIGUIENTE.
+// Mapea la tabla para la actividad 4.3 (ε utiliza columna SIGUIENTE implícitamente).
 inline TablaM crearTablaM()
 {
-    TablaM M{}; // todo en 0 = celda vacía
-    auto fila = [&M](NoTerm A, std::initializer_list<Term> columnas, uint8_t produccion)
-    {
-        for (Term a : columnas)
-            M[A][a] = produccion;
+    TablaM M{};
+    auto fila = [&M](NoTerm A, std::initializer_list<Term> columnas, uint8_t produccion) {
+        for (Term a : columnas) M[A][a] = produccion;
     };
 
     fila(NT_PROG, {T_MAP, T_FILTER, T_REDUCE, T_DEF, T_ID}, 1);

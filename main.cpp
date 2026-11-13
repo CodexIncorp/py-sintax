@@ -1,15 +1,11 @@
-// main.cpp — Analizador sintáctico predictivo no recursivo (LL(1)) para un subconjunto de Python:
-// asignaciones de listas y tuplas, map/filter/reduce y definición de funciones.
+// main.cpp — Analizador sintáctico predictivo no recursivo (LL(1)) para un subconjunto de Python.
+// Flujo: archivo .py → Scanner (lexer.h) → analizar (parser.h) → informe.h
 //
-// Flujo:  archivo .py  →  Scanner (lexer.h)  →  analizar (parser.h)  →  informe.h
-//
-// Compilar:  (Linux) g++ -std=c++17 -Wall -Wextra -o ./build/parser main.cpp
+// Compilar: (Linux) g++ -std=c++17 -Wall -Wextra -o ./build/parser main.cpp
 //           (Windows) g++ -o ./build/parser main.cpp
-// Usar:      ./build/parser programa.py [traza.csv]   (si no se da el .csv: programa.csv)
-//            ./build/parser --entrada-completa programa.py
-//                  la columna ENTRADA del CSV muestra todo lo que falta por leer (por defecto,
-//                  los próximos 60 tokens; el CSV completo crece con el cuadrado del archivo)
-//            ./build/parser --tabla                   (imprime la tabla M para el reporte)
+// Usar:     ./build/parser programa.py [traza.csv]
+//           ./build/parser --entrada-completa programa.py
+//           ./build/parser --tabla
 
 #include <fstream>
 #include <iostream>
@@ -23,12 +19,11 @@
 
 using namespace std;
 
-/// Lee el archivo completo. Quita el BOM UTF-8 si lo trae.
+// Lee el archivo completo y remueve el BOM UTF-8 si existe.
 static bool leerArchivo(const string &ruta, string &texto)
 {
     ifstream f(ruta, ios::binary);
-    if (!f)
-        return false;
+    if (!f) return false;
     ostringstream ss;
     ss << f.rdbuf();
     texto = ss.str();
@@ -37,7 +32,7 @@ static bool leerArchivo(const string &ruta, string &texto)
     return true;
 }
 
-/// "dir/prog.py" → "dir/prog.csv"
+// Reemplaza la extensión original por .csv ("dir/prog.py" → "dir/prog.csv").
 static string rutaCsvPorDefecto(const string &ruta)
 {
     size_t punto = ruta.find_last_of('.');
@@ -87,7 +82,7 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    // 1. Lexer: todo el archivo a tokens (termina siempre en T_EOF)
+    // 1. Lexer: lee archivo a tokens (siempre termina en T_EOF)
     vector<Token> tokens;
     Scanner scan(fuente);
     Token t;
@@ -97,10 +92,10 @@ int main(int argc, char **argv)
         tokens.push_back(t);
     } while (t.tipo != T_EOF);
 
-    // 2. Análisis sintáctico (no imprime nada)
+    // 2. Análisis sintáctico
     const Resultado resultado = analizar(tokens);
 
-    // 3. Salidas: la traza al CSV y el veredicto a consola
+    // 3. Salidas: traza a CSV y veredicto a consola
     if (!escribirCsv(rutaCsv, resultado, tokens, entradaCompleta ? 0 : 60))
         cerr << "Aviso: no se pudo escribir '" << rutaCsv << "'.\n";
     informarConsola(resultado, ruta, fuente);

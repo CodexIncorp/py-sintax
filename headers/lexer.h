@@ -1,12 +1,8 @@
 #pragma once
 // lexer.h — Analizador léxico de un archivo .py (subconjunto).
-//
 // Dos capas:
-//   1. Un autómata finito con tabla reconoce los tokens dentro de una línea.
-//   2. La clase Scanner añade lo que un autómata solo no puede: contar líneas,
-//      manejar la sangría con una pila (INDENT/DEDENT) y cerrar el archivo.
-//
-// Header-only: solo lo incluye main.cpp.
+//   1. Autómata finito que reconoce tokens por línea.
+//   2. Clase Scanner (cuenta líneas, maneja sangría vía pila y cierra EOF).
 
 #include <array>
 #include <cstdint>
@@ -21,96 +17,50 @@
 
 namespace lex_impl
 {
-    /// @brief Clases de carácter; cada valor es una columna de TABLA.
+    // Clases de carácter (columnas de TABLA).
     enum Clase : uint8_t
     {
-        LETRA,
-        DIGITO,
-        PARENI,
-        PARENF,
-        CORCHI,
-        CORCHD,
-        COMA,
-        DOSP,
-        MAS,
-        MENOS,
-        POR,
-        DIV,
-        MOD,
-        IGUAL,
-        ADMIR,
-        MENOR,
-        MAYOR,
-        PUNTO,
-        ESPACIO, // ' ' '\t' '\r' dentro de una línea
-        SALTO,   // '\n'
-        COMENT,  // '#'
-        FIN,     // fin del texto
-        OTRO,
-        N_CLASE
+        LETRA, DIGITO, PARENI, PARENF, CORCHI, CORCHD, COMA, DOSP, MAS, MENOS, 
+        POR, DIV, MOD, IGUAL, ADMIR, MENOR, MAYOR, PUNTO, ESPACIO, SALTO, COMENT, 
+        FIN, OTRO, N_CLASE
     };
 
-    /// Estados finales: >= 500.
-    ///   500 + t : token t reconocido; el último carácter leído NO es parte del token (se retrocede)
-    ///   600 + t : token t reconocido; el último carácter leído SÍ es parte del token
+    // Estados finales (>= 500):
+    // 500+t: Token t reconocido. El último caracter NO es parte del token (retrocede).
+    // 600+t: Token t reconocido. El último caracter SÍ es parte del token.
     constexpr int16_t FIN_MIN = 500;
     constexpr int16_t BASE_CONS = 600;
 
     constexpr int16_t RETRO(Term t) { return 500 + t; }
     constexpr int16_t CONS(Term t) { return BASE_CONS + t; }
 
-    /// Estados no finales
     enum Estado : int16_t
     {
-        E_INICIO = 0,
-        E_ID = 1,     // identificador o palabra reservada
-        E_ENTERO = 2, // dígitos
-        E_PUNTO = 3,  // dígitos '.'  (falta al menos un dígito)
-        E_DECIMAL = 4,
-        E_IGUAL = 5,  // '='  ("=" asignación o "==" comparación)
-        E_ADMIR = 6,  // '!'  (solo vale "!=")
-        E_MENOR = 7,  // '<'  ("<" o "<=")
-        E_MAYOR = 8,  // '>'  (">" o ">=")
-        E_COMENT = 9, // '#' hasta el fin de la línea
-        E_POR = 10,   // '*'  ("*" multiplicación o "**" potencia)
-        E_DIV = 11,   // '/'  ("/" division o "//" division entera)
-        N_ESTADO
+        E_INICIO = 0, E_ID = 1, E_ENTERO = 2, E_PUNTO = 3, E_DECIMAL = 4,
+        E_IGUAL = 5, E_ADMIR = 6, E_MENOR = 7, E_MAYOR = 8, E_COMENT = 9,
+        E_POR = 10, E_DIV = 11, N_ESTADO
     };
 
     using Tabla = std::array<std::array<int16_t, N_CLASE>, N_ESTADO>;
 
-    /// @brief Función de transición: TABLA[estado][clase] = estado siguiente.
+    // Función de transición: TABLA[estado][clase] = estado_siguiente.
     constexpr Tabla crearTabla()
     {
         Tabla t{};
 
-        // Valores por defecto de cada fila
-        for (auto &x : t[E_INICIO])
-            x = CONS(T_ERROR); // carácter inválido: se consume
-        for (auto &x : t[E_ID])
-            x = RETRO(T_ID);
-        for (auto &x : t[E_ENTERO])
-            x = RETRO(T_NUM);
-        for (auto &x : t[E_PUNTO])
-            x = RETRO(T_ERROR); // "3." sin dígitos después
-        for (auto &x : t[E_DECIMAL])
-            x = RETRO(T_NUM);
-        for (auto &x : t[E_IGUAL])
-            x = RETRO(T_ASIG);
-        for (auto &x : t[E_ADMIR])
-            x = RETRO(T_ERROR);
-        for (auto &x : t[E_MENOR])
-            x = RETRO(T_REL);
-        for (auto &x : t[E_MAYOR])
-            x = RETRO(T_REL);
-        for (auto &x : t[E_COMENT])
-            x = E_COMENT; // el comentario se traga todo
-        for (auto &x : t[E_POR])
-            x = RETRO(T_POR);
-        for (auto &x : t[E_DIV])
-            x = RETRO(T_DIV);
+        for (auto &x : t[E_INICIO]) x = CONS(T_ERROR); 
+        for (auto &x : t[E_ID])     x = RETRO(T_ID);
+        for (auto &x : t[E_ENTERO]) x = RETRO(T_NUM);
+        for (auto &x : t[E_PUNTO])  x = RETRO(T_ERROR); // "3." sin dígitos después
+        for (auto &x : t[E_DECIMAL])x = RETRO(T_NUM);
+        for (auto &x : t[E_IGUAL])  x = RETRO(T_ASIG);
+        for (auto &x : t[E_ADMIR])  x = RETRO(T_ERROR);
+        for (auto &x : t[E_MENOR])  x = RETRO(T_REL);
+        for (auto &x : t[E_MAYOR])  x = RETRO(T_REL);
+        for (auto &x : t[E_COMENT]) x = E_COMENT; 
+        for (auto &x : t[E_POR])    x = RETRO(T_POR);
+        for (auto &x : t[E_DIV])    x = RETRO(T_DIV);
 
-        // Estado inicial
         t[E_INICIO][LETRA] = E_ID;
         t[E_INICIO][DIGITO] = E_ENTERO;
         t[E_INICIO][PARENI] = CONS(T_LP);
@@ -128,34 +78,26 @@ namespace lex_impl
         t[E_INICIO][ADMIR] = E_ADMIR;
         t[E_INICIO][MENOR] = E_MENOR;
         t[E_INICIO][MAYOR] = E_MAYOR;
-        t[E_INICIO][ESPACIO] = E_INICIO;      // los espacios se saltan
-        t[E_INICIO][SALTO] = CONS(T_NEWLINE); // el '\n' es parte del token NEWLINE
+        t[E_INICIO][ESPACIO] = E_INICIO;
+        t[E_INICIO][SALTO] = CONS(T_NEWLINE);
         t[E_INICIO][COMENT] = E_COMENT;
-        t[E_INICIO][FIN] = RETRO(T_EOF); // no avanza: pedir más tokens sigue dando $
+        t[E_INICIO][FIN] = RETRO(T_EOF);
 
-        // Identificadores: letras, dígitos y '_'
         t[E_ID][LETRA] = E_ID;
         t[E_ID][DIGITO] = E_ID;
-
-        // Números
         t[E_ENTERO][DIGITO] = E_ENTERO;
         t[E_ENTERO][PUNTO] = E_PUNTO;
         t[E_PUNTO][DIGITO] = E_DECIMAL;
         t[E_DECIMAL][DIGITO] = E_DECIMAL;
 
-        // '==' y operadores relacionales de dos caracteres
         t[E_IGUAL][IGUAL] = CONS(T_REL);
         t[E_ADMIR][IGUAL] = CONS(T_REL);
         t[E_MENOR][IGUAL] = CONS(T_REL);
         t[E_MAYOR][IGUAL] = CONS(T_REL);
-
-        // '**' potencia
+        
         t[E_POR][POR] = CONS(T_POT);
-
-        // '//' division entera
         t[E_DIV][DIV] = CONS(T_IDIV);
 
-        // Un comentario termina la línea lógica
         t[E_COMENT][SALTO] = CONS(T_NEWLINE);
         t[E_COMENT][FIN] = RETRO(T_NEWLINE);
 
@@ -164,110 +106,67 @@ namespace lex_impl
 
     inline constexpr Tabla TABLA = crearTabla();
 
-    /// @brief Construye en compilación la tabla que traduce cada byte (0-255) a su clase.
+    // Mapeo en tiempo de compilación de cada byte (0-255) a su clase léxica.
     constexpr std::array<uint8_t, 256> crearClases()
     {
         std::array<uint8_t, 256> t{};
-        for (auto &x : t)
-            x = OTRO;
-        for (int c = 'a'; c <= 'z'; ++c)
-            t[c] = t[c - 32] = LETRA;
+        for (auto &x : t) x = OTRO;
+        for (int c = 'a'; c <= 'z'; ++c) t[c] = t[c - 32] = LETRA;
         t['_'] = LETRA;
-        for (int c = '0'; c <= '9'; ++c)
-            t[c] = DIGITO;
-        t['('] = PARENI;
-        t[')'] = PARENF;
-        t['['] = CORCHI;
-        t[']'] = CORCHD;
-        t[','] = COMA;
-        t[':'] = DOSP;
-        t['+'] = MAS;
-        t['-'] = MENOS;
-        t['*'] = POR;
-        t['/'] = DIV;
-        t['%'] = MOD;
-        t['='] = IGUAL;
-        t['!'] = ADMIR;
-        t['<'] = MENOR;
-        t['>'] = MAYOR;
-        t['.'] = PUNTO;
+        for (int c = '0'; c <= '9'; ++c) t[c] = DIGITO;
+        t['('] = PARENI; t[')'] = PARENF; t['['] = CORCHI; t[']'] = CORCHD;
+        t[','] = COMA; t[':'] = DOSP; t['+'] = MAS; t['-'] = MENOS;
+        t['*'] = POR; t['/'] = DIV; t['%'] = MOD; t['='] = IGUAL;
+        t['!'] = ADMIR; t['<'] = MENOR; t['>'] = MAYOR; t['.'] = PUNTO;
         t[' '] = t['\t'] = t['\r'] = ESPACIO;
-        t['\n'] = SALTO;
-        t['#'] = COMENT;
-        t[0] = FIN;
+        t['\n'] = SALTO; t['#'] = COMENT; t[0] = FIN;
         return t;
     }
 
     inline constexpr auto CLASE = crearClases();
 
-    /// Describe un caracter UTF-8 no ASCII como "U+00E9" para no imprimir bytes que la consola
-    /// podria no reconocer.
+    // Formatea caracteres UTF-8 no ASCII (ej. "U+00E9") para evitar problemas en consola.
     inline std::string codigoUnicode(std::string_view s)
     {
         const unsigned char b0 = static_cast<unsigned char>(s[0]);
         std::size_t extra = 0;
         uint32_t cp = 0;
-        if (b0 >= 0xF0 && b0 < 0xF8)
-        {
-            cp = b0 & 0x07;
-            extra = 3;
-        }
-        else if (b0 >= 0xE0)
-        {
-            cp = b0 & 0x0F;
-            extra = 2;
-        }
-        else if (b0 >= 0xC0)
-        {
-            cp = b0 & 0x1F;
-            extra = 1;
-        }
-        if (extra == 0 || s.size() != extra + 1)
-            return "byte invalido";
+        if (b0 >= 0xF0 && b0 < 0xF8) { cp = b0 & 0x07; extra = 3; }
+        else if (b0 >= 0xE0) { cp = b0 & 0x0F; extra = 2; }
+        else if (b0 >= 0xC0) { cp = b0 & 0x1F; extra = 1; }
+        
+        if (extra == 0 || s.size() != extra + 1) return "byte invalido";
         for (std::size_t k = 1; k <= extra; ++k)
             cp = (cp << 6) | (static_cast<unsigned char>(s[k]) & 0x3F);
+        
         char buf[16];
         std::snprintf(buf, sizeof buf, "U+%04X", static_cast<unsigned>(cp));
         return buf;
     }
 
-    /// Palabras reservadas: un identificador con este lexema cambia de tipo.
     inline constexpr std::array<std::pair<std::string_view, Term>, 8> RESERVADAS = {{
-        {"map", T_MAP},
-        {"filter", T_FILTER},
-        {"reduce", T_REDUCE},
-        {"lambda", T_LAMBDA},
-        {"range", T_RANGE},
-        {"def", T_DEF},
-        {"return", T_RETURN},
-        {"pass", T_PASS},
+        {"map", T_MAP}, {"filter", T_FILTER}, {"reduce", T_REDUCE},
+        {"lambda", T_LAMBDA}, {"range", T_RANGE}, {"def", T_DEF},
+        {"return", T_RETURN}, {"pass", T_PASS},
     }};
-} // namespace lex_impl
+}
 
-/// @brief Analizador léxico de un archivo completo.
-/// No copia el texto: la cadena original debe seguir viva mientras se use.
-///
-/// Además de los tokens de cada línea, produce los tokens de estructura:
-///   NEWLINE  al terminar cada línea con contenido (también al final del archivo,
-///            aunque el archivo no termine en salto de línea);
-///   INDENT / DEDENT cuando cambia la sangría;
-///   EOF ($)  al final, todas las veces que se pida.
-/// Las líneas en blanco y los comentarios no producen tokens. Dentro de paréntesis o
-/// corchetes los saltos de línea no terminan la sentencia (como en Python).
+// Analizador léxico de archivo completo (string_view sobre el texto original).
+// Incluye tokens estructurales sintéticos (NEWLINE, INDENT, DEDENT).
 class Scanner
 {
     std::string_view str;
     std::size_t pos = 0;
-    std::size_t linea = 1;       // línea actual (base 1)
-    std::size_t inicioLinea = 0; // posición donde empieza la línea actual
-    std::size_t ultimaLinea = 1; // posición del último token real, para los tokens sintéticos del cierre
+    std::size_t linea = 1;       
+    std::size_t inicioLinea = 0; 
+    std::size_t ultimaLinea = 1; 
     std::size_t ultimaFin = 1;
     std::size_t prof = 0; // profundidad de paréntesis/corchetes abiertos
-    bool alMargen = true; // estamos al inicio de una línea (falta leer su sangría)
+    bool alMargen = true;
     bool lineaConContenido = false;
-    char tipoSangria = 0;             // ' ' o '\t': lo que usa este archivo para sangrar
+    char tipoSangria = 0;             
     std::vector<std::size_t> pila{0}; // niveles de sangría abiertos
-    std::deque<Token> cola;           // INDENT/DEDENT/error pendientes de entregar
+    std::deque<Token> cola;           // tokens pendientes
 
     void registrar(const Token &t)
     {
@@ -283,8 +182,7 @@ class Scanner
         return t;
     }
 
-    /// Lee la sangría de la línea que empieza en pos. Salta líneas en blanco y de
-    /// comentario; si la línea tiene contenido, encola INDENT/DEDENT (o un error).
+    // Evalúa la sangría saltando líneas en blanco y comentarios.
     void margen()
     {
         for (;;)
@@ -297,28 +195,20 @@ class Scanner
                 ++q;
             }
             std::size_t r = q;
-            while (r < str.size() && str[r] == '\r')
-                ++r;
+            while (r < str.size() && str[r] == '\r') ++r;
 
-            if (r >= str.size()) // solo quedaban blancos: fin del archivo
+            if (r >= str.size()) // fin del archivo
             {
                 pos = str.size();
                 alMargen = false;
                 return;
             }
-            if (str[r] == '\n') // línea en blanco
+            if (str[r] == '\n' || str[r] == '#') // ignorar blanco/comentario
             {
-                pos = r + 1;
-                ++linea;
-                inicioLinea = pos;
-                continue;
-            }
-            if (str[r] == '#') // línea que solo tiene un comentario
-            {
-                while (r < str.size() && str[r] != '\n')
-                    ++r;
-                if (r < str.size())
-                {
+                if (str[r] == '#') {
+                    while (r < str.size() && str[r] != '\n') ++r;
+                }
+                if (r < str.size()) {
                     ++r;
                     ++linea;
                 }
@@ -327,26 +217,22 @@ class Scanner
                 continue;
             }
 
-            // Línea con contenido: comparar su sangría con la pila
             pos = q;
             alMargen = false;
             const std::size_t ancho = q - ini;
-            auto error = [&](const std::string &msg)
-            {
+            auto error = [&](const std::string &msg) {
                 cola.clear();
                 cola.push_back({T_ERROR, "", linea, ancho + 1, msg});
                 lineaConContenido = true;
             };
 
-            if (tabs && esp)
-                return error("la sangria mezcla tabuladores y espacios");
+            if (tabs && esp) return error("la sangria mezcla tabuladores y espacios");
+            
             if (ancho > 0)
             {
                 const char k = tabs ? '\t' : ' ';
-                if (!tipoSangria)
-                    tipoSangria = k;
-                else if (tipoSangria != k)
-                    return error("el archivo mezcla tabuladores y espacios en la sangria");
+                if (!tipoSangria) tipoSangria = k;
+                else if (tipoSangria != k) return error("el archivo mezcla tabuladores y espacios en la sangria");
             }
 
             if (ancho > pila.back())
@@ -361,7 +247,7 @@ class Scanner
                     pila.pop_back();
                     cola.push_back({T_DEDENT, "", linea, 1, ""});
                 }
-                if (pila.back() != ancho) // no coincide con ningún nivel abierto
+                if (pila.back() != ancho)
                 {
                     error("la sangria no coincide con ningun nivel anterior");
                     pila.push_back(ancho);
@@ -371,7 +257,7 @@ class Scanner
         }
     }
 
-    /// Fin del texto: cierra la última línea y los bloques abiertos, y luego da $.
+    // Cierra la última línea y bloques abiertos antes del EOF.
     Token cierre()
     {
         if (lineaConContenido)
@@ -390,20 +276,15 @@ class Scanner
 public:
     explicit Scanner(std::string_view s) : str(s) {}
 
-    /// @brief Entrega el siguiente token del archivo.
-    /// Un carácter inválido produce T_ERROR (con su descripción en `mensaje`) y se avanza,
-    /// de modo que seguir pidiendo tokens siempre termina en T_EOF.
     Token next()
     {
         using namespace lex_impl;
 
-        if (!cola.empty())
-            return sacar();
-        if (alMargen && prof == 0) // dentro de paréntesis la sangría no cuenta
+        if (!cola.empty()) return sacar();
+        if (alMargen && prof == 0)
         {
             margen();
-            if (!cola.empty())
-                return sacar();
+            if (!cola.empty()) return sacar();
         }
 
         Term tipo;
@@ -417,8 +298,7 @@ public:
                 unsigned char c = pos < str.size() ? str[pos] : 0;
                 estado = TABLA[estado][CLASE[c]];
                 ++pos;
-                if (estado == E_INICIO)
-                    ini = pos; // seguimos en blanco: el token aún no empieza
+                if (estado == E_INICIO) ini = pos;
             } while (estado < FIN_MIN);
 
             if (estado >= BASE_CONS)
@@ -426,10 +306,9 @@ public:
             else
             {
                 tipo = static_cast<Term>(estado - FIN_MIN);
-                --pos; // el carácter que cerró el token no se consume
+                --pos;
             }
 
-            // Un '\n' (o un comentario) dentro de paréntesis solo es un espacio
             if (tipo == T_NEWLINE && prof > 0 && pos > 0 && str[pos - 1] == '\n')
             {
                 ++linea;
@@ -439,7 +318,6 @@ public:
             break;
         }
 
-        // Un símbolo no ASCII ocupa varios bytes: se reporta completo
         if (tipo == T_ERROR && pos - ini == 1 && static_cast<unsigned char>(str[ini]) >= 0xC0)
             while (pos < str.size() && (static_cast<unsigned char>(str[pos]) & 0xC0) == 0x80)
                 ++pos;
@@ -447,16 +325,11 @@ public:
         const std::string_view lex = str.substr(ini, pos - ini);
         Token t{tipo, std::string(lex), linea, ini - inicioLinea + 1, ""};
 
-        if (tipo == T_EOF)
-            return cierre();
+        if (tipo == T_EOF) return cierre();
 
         if (tipo == T_ID)
             for (const auto &[palabra, r] : RESERVADAS)
-                if (lex == palabra)
-                {
-                    t.tipo = r;
-                    break;
-                }
+                if (lex == palabra) { t.tipo = r; break; }
 
         if (tipo == T_ERROR)
         {
@@ -468,14 +341,12 @@ public:
                 t.mensaje = "simbolo no valido '" + t.lexema + "'";
         }
 
-        if (tipo == T_LP || tipo == T_LB)
-            ++prof;
-        else if ((tipo == T_RP || tipo == T_RB) && prof > 0)
-            --prof;
+        if (tipo == T_LP || tipo == T_LB) ++prof;
+        else if ((tipo == T_RP || tipo == T_RB) && prof > 0) --prof;
 
         if (tipo == T_NEWLINE)
         {
-            if (!lex.empty() && lex.back() == '\n') // el salto se consumió: empieza otra línea
+            if (!lex.empty() && lex.back() == '\n')
             {
                 ++linea;
                 inicioLinea = pos;
@@ -483,8 +354,7 @@ public:
             alMargen = true;
             lineaConContenido = false;
         }
-        else
-            lineaConContenido = true;
+        else lineaConContenido = true;
 
         registrar(t);
         return t;

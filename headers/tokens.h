@@ -1,13 +1,12 @@
 #pragma once
-// tokens.h - Vocabulario terminal de la gramatica.
-// Lo comparten el lexer (que produce tokens) y la gramatica/analizador (que los consumen).
-// Todo texto que el programa imprime es ASCII puro (sin acentos ni simbolos especiales).
+// tokens.h - Vocabulario terminal de la gramática.
+// Compartido por el lexer y el analizador sintáctico. Salida en ASCII puro.
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
-/// @brief Terminales de la gramatica. Son las columnas de la tabla M.
+// Terminales de la gramática (columnas de la tabla M).
 enum Term : uint8_t
 {
     T_MAP,
@@ -17,7 +16,7 @@ enum Term : uint8_t
     T_RANGE,
     T_DEF,
     T_RETURN,
-    T_PASS, // 'pass' (cuerpo de funcion vacio)
+    T_PASS,    // 'pass' (cuerpo de función vacío)
     T_ID,
     T_NUM,
     T_LP,      // (
@@ -35,21 +34,21 @@ enum Term : uint8_t
     T_MOD,     // %
     T_POT,     // **
     T_REL,     // == != < > <= >=
-    T_NEWLINE, // fin de una linea logica
-    T_INDENT,  // aumento de sangria
-    T_DEDENT,  // disminucion de sangria
+    T_NEWLINE, // fin de una línea lógica
+    T_INDENT,  // aumento de sangría
+    T_DEDENT,  // disminución de sangría
     T_EOF,     // $
-    T_ERROR,   // error lexico (lo produce el lexer; no esta en la gramatica)
+    T_ERROR,   // error léxico (interno del lexer; no está en la gramática)
     N_TERM
 };
 
-/// @brief Nombre de cada terminal tal como aparece en la traza y en el reporte.
+// Nombre de cada terminal para la traza y el reporte.
 inline constexpr const char *NOMBRE_T[N_TERM] = {
     "map", "filter", "reduce", "lambda", "range", "def", "return", "pass", "id", "num",
     "(", ")", "[", "]", ",", ":", "=", "+", "-", "*", "/", "//", "%", "**", "rel",
     "NEWLINE", "INDENT", "DEDENT", "$", "ERROR"};
 
-/// @brief Descripcion para mensajes de error dirigidos al usuario.
+// Descripciones legibles para mensajes de error.
 inline constexpr const char *LEGIBLE_T[N_TERM] = {
     "'map'", "'filter'", "'reduce'", "'lambda'", "'range'", "'def'", "'return'", "'pass'",
     "un identificador", "un numero",
@@ -58,12 +57,12 @@ inline constexpr const char *LEGIBLE_T[N_TERM] = {
     "el fin de la linea", "una sangria", "el fin del bloque", "el fin del archivo",
     "un simbolo no valido"};
 
-/// @brief Un token con su posicion en el archivo (linea y columna, base 1).
+// Token con su posición en el archivo fuente (base 1).
 struct Token
 {
     Term tipo;
     std::string lexema;
     std::size_t linea;
     std::size_t col;
-    std::string mensaje; // solo para T_ERROR: descripcion del problema lexico
+    std::string mensaje; // Solo para T_ERROR: descripción del problema léxico
 };
