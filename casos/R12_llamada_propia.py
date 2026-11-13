@@ -1,0 +1,1 @@
+resultado = cuadrado(3)
