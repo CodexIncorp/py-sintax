@@ -187,8 +187,8 @@ namespace lex_impl
 
     inline constexpr auto CLASE = crearClases();
 
-    /// Palabras reservadas: un identificador con este lexema cambia de tipo.
-    inline constexpr std::array<std::pair<std::string_view, Term>, 7> RESERVADAS = {{
+/// Palabras reservadas: un identificador con este lexema cambia de tipo.
+    inline constexpr std::array<std::pair<std::string_view, Term>, 8> RESERVADAS = {{
         {"map", T_MAP},
         {"filter", T_FILTER},
         {"reduce", T_REDUCE},
@@ -196,6 +196,7 @@ namespace lex_impl
         {"range", T_RANGE},
         {"def", T_DEF},
         {"return", T_RETURN},
+        {"pass", T_PASS}, // <-- Agregado
     }};
 } // namespace lex_impl
 

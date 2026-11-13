@@ -13,34 +13,20 @@
 #include "tokens.h"
 
 /// @brief No terminales. Son las filas de la tabla M.
+
 enum NoTerm : uint8_t
 {
-    NT_PROG,
-    NT_SENT,
-    NT_VAL,
-    NT_LLAM,
-    NT_O,
-    NT_FN,
-    NT_P,
-    NT_PP,
-    NT_I,
-    NT_L,
-    NT_LP,
-    NT_E,
-    NT_EP,
-    NT_A,
-    NT_AP,
-    NT_T,
-    NT_TP,
-    NT_F,
-    NT_PAR,
-    NT_COLA,
-    NT_RESTO,
+    NT_PROG, NT_SENT, NT_VAL, NT_LLAM, NT_O, NT_FN, NT_P, NT_PP, NT_I, NT_L, NT_LP, 
+    NT_E, NT_EP, NT_A, NT_AP, NT_T, NT_TP, NT_F, NT_PAR, NT_COLA, NT_RESTO,
+    NT_BLOQUE, // <-- Nuevo no terminal para BLOQUE_FUNC
     N_NOTERM
 };
 
 inline constexpr const char *NOMBRE_NT[N_NOTERM] = {
-    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", "A", "A'", "T", "T'", "F", "Par", "Cola", "Resto"};
+    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", 
+    "A", "A'", "T", "T'", "F", "Par", "Cola", "Resto", 
+    "Bloque" // <-- Nombre para la traza
+};
 
 /// @brief Símbolo de una producción: terminal o no terminal.
 struct Simbolo
@@ -175,7 +161,8 @@ inline TablaM crearTablaM()
     fila(NT_COLA, {T_COMA}, 46);
     fila(NT_RESTO, {T_RP}, 47);
     fila(NT_RESTO, {T_ID, T_NUM, T_LP}, 48);
-
+    fila(NT_BLOQUE, {T_RETURN}, 49);
+    fila(NT_BLOQUE, {T_PASS}, 50);
     return M;
 }
 
