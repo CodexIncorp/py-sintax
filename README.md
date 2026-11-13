@@ -66,7 +66,6 @@ El código es modular y *header-only* en su lógica interna, separando el vocabu
 │   ├── gramatica.h         # 25 no terminales, 56 producciones LL(1) y tabla predictiva M
 │   ├── parser.h            # Algoritmo predictivo no recursivo con pila explícita
 │   └── informe.h           # Exportación de traza CSV (RFC 4180), errores en consola y tabla M
-
 ├── main.cpp                # Punto de entrada y CLI
 └── README.md
 ```
