@@ -1,12 +1,13 @@
 #pragma once
-// tokens.h — Vocabulario terminal de la gramática.
-// Lo comparten el lexer (que produce tokens) y la gramática/analizador (que los consumen).
+// tokens.h - Vocabulario terminal de la gramatica.
+// Lo comparten el lexer (que produce tokens) y la gramatica/analizador (que los consumen).
+// Todo texto que el programa imprime es ASCII puro (sin acentos ni simbolos especiales).
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 
-/// @brief Terminales de la gramática. Son las columnas de la tabla M.
+/// @brief Terminales de la gramatica. Son las columnas de la tabla M.
 enum Term : uint8_t
 {
     T_MAP,
@@ -29,37 +30,39 @@ enum Term : uint8_t
     T_MENOS,   // -
     T_POR,     // *
     T_DIV,     // /
+    T_IDIV,    // //
     T_MOD,     // %
+    T_POT,     // **
     T_REL,     // == != < > <= >=
-    T_NEWLINE, // fin de una línea lógica
-    T_INDENT,  // aumento de sangría
-    T_DEDENT,  // disminución de sangría
+    T_NEWLINE, // fin de una linea logica
+    T_INDENT,  // aumento de sangria
+    T_DEDENT,  // disminucion de sangria
     T_EOF,     // $
-    T_ERROR,   // error léxico (lo produce el lexer; no está en la gramática)
+    T_ERROR,   // error lexico (lo produce el lexer; no esta en la gramatica)
     N_TERM
 };
 
 /// @brief Nombre de cada terminal tal como aparece en la traza y en el reporte.
 inline constexpr const char *NOMBRE_T[N_TERM] = {
     "map", "filter", "reduce", "lambda", "range", "def", "return", "id", "num",
-    "(", ")", "[", "]", ",", ":", "=", "+", "-", "*", "/", "%", "rel",
+    "(", ")", "[", "]", ",", ":", "=", "+", "-", "*", "/", "//", "%", "**", "rel",
     "NEWLINE", "INDENT", "DEDENT", "$", "ERROR"};
 
-/// @brief Descripción para mensajes de error dirigidos al usuario.
+/// @brief Descripcion para mensajes de error dirigidos al usuario.
 inline constexpr const char *LEGIBLE_T[N_TERM] = {
     "'map'", "'filter'", "'reduce'", "'lambda'", "'range'", "'def'", "'return'",
     "un identificador", "un numero",
-    "'('", "')'", "'['", "']'", "','", "':'", "'='", "'+'", "'-'", "'*'", "'/'", "'%'",
-    "un operador de comparación",
-    "el fin de la línea", "una sangría", "el fin del bloque", "el fin del archivo",
-    "un símbolo no válido"};
+    "'('", "')'", "'['", "']'", "','", "':'", "'='", "'+'", "'-'", "'*'", "'/'", "'//'", "'%'", "'**'",
+    "un operador de comparacion",
+    "el fin de la linea", "una sangria", "el fin del bloque", "el fin del archivo",
+    "un simbolo no valido"};
 
-/// @brief Un token con su posición en el archivo (línea y columna, base 1).
+/// @brief Un token con su posicion en el archivo (linea y columna, base 1).
 struct Token
 {
     Term tipo;
     std::string lexema;
     std::size_t linea;
     std::size_t col;
-    std::string mensaje; // solo para T_ERROR: descripción del problema léxico
+    std::string mensaje; // solo para T_ERROR: descripcion del problema lexico
 };

@@ -1,5 +1,5 @@
 #pragma once
-// analizador.h — Análisis sintáctico predictivo no recursivo (LL(1)).
+// parser.h — Análisis sintáctico predictivo no recursivo (LL(1)).
 //
 // Esta capa solo calcula: recibe los tokens y devuelve un Resultado (veredicto, error con
 // su posición y la traza completa). No lee archivos ni imprime nada; de eso se encarga
@@ -54,12 +54,12 @@ namespace analisis_impl
     }
 } // namespace analisis_impl
 
-/// @brief La producción p escrita como "A → α" (ε si la parte derecha es vacía).
+/// @brief La produccion p escrita como "A -> alfa" ("eps" si la parte derecha es vacia). Solo ASCII.
 inline std::string produccionStr(int p)
 {
-    std::string s = std::string(NOMBRE_NT[PROD[p].izq]) + " → ";
+    std::string s = std::string(NOMBRE_NT[PROD[p].izq]) + " -> ";
     if (PROD[p].der.empty())
-        return s + "ε";
+        return s + "eps";
     for (std::size_t k = 0; k < PROD[p].der.size(); ++k)
         s += (k ? " " : "") + analisis_impl::nombre(PROD[p].der[k]);
     return s;

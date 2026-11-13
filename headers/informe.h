@@ -37,11 +37,21 @@ namespace informe_impl
         {
             if (limite && n == limite)
             {
-                s += " … (+" + std::to_string(toks.size() - i) + ")";
+                s += " ... (+" + std::to_string(toks.size() - i) + ")";
                 break;
             }
             s += (s.empty() ? "" : " ") + std::string(NOMBRE_T[toks[i].tipo]);
         }
+        return s;
+    }
+
+    /// Reemplaza por '?' cada byte no ASCII (la consola podria no reconocerlo). Un byte por byte,
+    /// para que la columna del error siga alineada con el apuntador.
+    inline std::string soloAscii(std::string s)
+    {
+        for (char &c : s)
+            if (static_cast<unsigned char>(c) >= 0x80 || (static_cast<unsigned char>(c) < 0x20 && c != '\t'))
+                c = '?';
         return s;
     }
 
@@ -64,7 +74,7 @@ namespace informe_impl
     }
 } // namespace informe_impl
 
-/// @brief Escribe la traza en CSV (UTF-8 con BOM, para que Excel respete ε, → y acentos).
+/// @brief Escribe la traza en CSV. Todo el contenido es ASCII, asi que abre igual en cualquier programa.
 /// @param maxEntrada máximo de tokens que muestra la columna ENTRADA (0 = todos). Mostrar todos
 ///        hace que el archivo crezca con el cuadrado del tamaño de la entrada.
 /// @return false si no se pudo crear el archivo.
@@ -75,8 +85,7 @@ inline bool escribirCsv(const std::string &ruta, const Resultado &r, const std::
     std::ofstream f(ruta, std::ios::binary);
     if (!f)
         return false;
-    f << "\xEF\xBB\xBF"
-      << "paso,línea,pila,entrada,acción\n";
+    f << "paso,linea,pila,entrada,accion\n";
     for (const Paso &p : r.traza)
         f << p.numero << ',' << p.linea << ',' << campo(p.pila) << ','
           << campo(entrada(toks, p.indice, maxEntrada)) << ',' << campo(p.accion) << '\n';
@@ -96,7 +105,7 @@ inline void informarConsola(const Resultado &r, const std::string &archivo, cons
     std::cerr << (r.tipo == TipoError::Lexico ? "Error lexico" : "Error sintactico")
               << " en la linea " << r.linea << ", columna " << r.col << ": " << r.mensaje << "\n";
 
-    const std::string texto = lineaDeTexto(fuente, r.linea);
+    const std::string texto = soloAscii(lineaDeTexto(fuente, r.linea));
     const std::string num = std::to_string(r.linea);
     std::cerr << "  " << num << " | " << texto << "\n";
 
@@ -117,7 +126,7 @@ inline void imprimirTabla(std::ostream &os)
         os << NOMBRE_NT[A] << ":\n";
         for (int a = 0; a < T_ERROR; ++a)
             if (M[A][a])
-                os << "    " << std::setw(8) << std::left << NOMBRE_T[a] << " → " << std::setw(2)
+                os << "    " << std::setw(8) << std::left << NOMBRE_T[a] << " -> " << std::setw(2)
                    << std::right << int(M[A][a]) << "   (" << produccionStr(M[A][a]) << ")\n";
     }
 }

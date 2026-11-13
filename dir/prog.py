@@ -6,4 +6,4 @@ filter(cuadrado, lista)
 reduce(lambda x, y: x + y, lista)
 
 def cuadrado(x):
-    return x * 2
+    return x ** 2

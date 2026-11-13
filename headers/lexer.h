@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdio>
 #include <deque>
 #include <string>
 #include <string_view>
@@ -71,6 +72,8 @@ namespace lex_impl
         E_MENOR = 7,  // '<'  ("<" o "<=")
         E_MAYOR = 8,  // '>'  (">" o ">=")
         E_COMENT = 9, // '#' hasta el fin de la línea
+        E_POR = 10,   // '*'  ("*" multiplicación o "**" potencia)
+        E_DIV = 11,   // '/'  ("/" division o "//" division entera)
         N_ESTADO
     };
 
@@ -102,6 +105,10 @@ namespace lex_impl
             x = RETRO(T_REL);
         for (auto &x : t[E_COMENT])
             x = E_COMENT; // el comentario se traga todo
+        for (auto &x : t[E_POR])
+            x = RETRO(T_POR);
+        for (auto &x : t[E_DIV])
+            x = RETRO(T_DIV);
 
         // Estado inicial
         t[E_INICIO][LETRA] = E_ID;
@@ -114,8 +121,8 @@ namespace lex_impl
         t[E_INICIO][DOSP] = CONS(T_DOSP);
         t[E_INICIO][MAS] = CONS(T_MAS);
         t[E_INICIO][MENOS] = CONS(T_MENOS);
-        t[E_INICIO][POR] = CONS(T_POR);
-        t[E_INICIO][DIV] = CONS(T_DIV);
+        t[E_INICIO][POR] = E_POR;
+        t[E_INICIO][DIV] = E_DIV;
         t[E_INICIO][MOD] = CONS(T_MOD);
         t[E_INICIO][IGUAL] = E_IGUAL;
         t[E_INICIO][ADMIR] = E_ADMIR;
@@ -141,6 +148,12 @@ namespace lex_impl
         t[E_ADMIR][IGUAL] = CONS(T_REL);
         t[E_MENOR][IGUAL] = CONS(T_REL);
         t[E_MAYOR][IGUAL] = CONS(T_REL);
+
+        // '**' potencia
+        t[E_POR][POR] = CONS(T_POT);
+
+        // '//' division entera
+        t[E_DIV][DIV] = CONS(T_IDIV);
 
         // Un comentario termina la línea lógica
         t[E_COMENT][SALTO] = CONS(T_NEWLINE);
@@ -186,6 +199,37 @@ namespace lex_impl
     }
 
     inline constexpr auto CLASE = crearClases();
+
+    /// Describe un caracter UTF-8 no ASCII como "U+00E9" para no imprimir bytes que la consola
+    /// podria no reconocer.
+    inline std::string codigoUnicode(std::string_view s)
+    {
+        const unsigned char b0 = static_cast<unsigned char>(s[0]);
+        std::size_t extra = 0;
+        uint32_t cp = 0;
+        if (b0 >= 0xF0 && b0 < 0xF8)
+        {
+            cp = b0 & 0x07;
+            extra = 3;
+        }
+        else if (b0 >= 0xE0)
+        {
+            cp = b0 & 0x0F;
+            extra = 2;
+        }
+        else if (b0 >= 0xC0)
+        {
+            cp = b0 & 0x1F;
+            extra = 1;
+        }
+        if (extra == 0 || s.size() != extra + 1)
+            return "byte invalido";
+        for (std::size_t k = 1; k <= extra; ++k)
+            cp = (cp << 6) | (static_cast<unsigned char>(s[k]) & 0x3F);
+        char buf[16];
+        std::snprintf(buf, sizeof buf, "U+%04X", static_cast<unsigned>(cp));
+        return buf;
+    }
 
     /// Palabras reservadas: un identificador con este lexema cambia de tipo.
     inline constexpr std::array<std::pair<std::string_view, Term>, 7> RESERVADAS = {{
@@ -294,14 +338,14 @@ class Scanner
             };
 
             if (tabs && esp)
-                return error("la sangría mezcla tabuladores y espacios");
+                return error("la sangria mezcla tabuladores y espacios");
             if (ancho > 0)
             {
                 const char k = tabs ? '\t' : ' ';
                 if (!tipoSangria)
                     tipoSangria = k;
                 else if (tipoSangria != k)
-                    return error("el archivo mezcla tabuladores y espacios en la sangría");
+                    return error("el archivo mezcla tabuladores y espacios en la sangria");
             }
 
             if (ancho > pila.back())
@@ -318,7 +362,7 @@ class Scanner
                 }
                 if (pila.back() != ancho) // no coincide con ningún nivel abierto
                 {
-                    error("la sangría no coincide con ningún nivel anterior");
+                    error("la sangria no coincide con ningun nivel anterior");
                     pila.push_back(ancho);
                 }
             }
@@ -414,9 +458,14 @@ public:
                 }
 
         if (tipo == T_ERROR)
-            t.mensaje = (!lex.empty() && lex.back() == '.' && lex[0] >= '0' && lex[0] <= '9')
-                            ? "número mal formado '" + t.lexema + "'"
-                            : "símbolo no válido '" + t.lexema + "'";
+        {
+            if (!lex.empty() && static_cast<unsigned char>(lex[0]) >= 0x80)
+                t.mensaje = "caracter no ASCII no valido (" + codigoUnicode(lex) + ")";
+            else if (!lex.empty() && lex.back() == '.' && lex[0] >= '0' && lex[0] <= '9')
+                t.mensaje = "numero mal formado '" + t.lexema + "'";
+            else
+                t.mensaje = "simbolo no valido '" + t.lexema + "'";
+        }
 
         if (tipo == T_LP || tipo == T_LB)
             ++prof;
