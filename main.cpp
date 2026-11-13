@@ -1,10 +1,10 @@
 // main.cpp — Analizador sintáctico predictivo no recursivo (LL(1)) para un subconjunto de Python:
 // asignaciones de listas y tuplas, map/filter/reduce y definición de funciones.
 //
-// Flujo:  archivo .py  →  Scanner (lexer.h)  →  analizar (analizador.h)  →  informe.h
+// Flujo:  archivo .py  →  Scanner (lexer.h)  →  analizar (parser.h)  →  informe.h
 //
 // Compilar:  (Linux) g++ -std=c++17 -Wall -Wextra -o ./build/parser main.cpp
-//           (Windows) g++ -o ./build\parser main.cpp                
+//           (Windows) g++ -o ./build/parser main.cpp                
 // Usar:      ./build/parser programa.py [traza.csv]   (si no se da el .csv: programa.csv)
 //            ./build/parser --entrada-completa programa.py
 //                  la columna ENTRADA del CSV muestra todo lo que falta por leer (por defecto,

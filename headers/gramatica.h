@@ -1,9 +1,9 @@
 #pragma once
 // gramatica.h — La gramática LL(1) ya sin recursividad por la izquierda:
-// no terminales, producciones numeradas (1-48) y tabla de análisis M.
+// no terminales, producciones numeradas (1-54) y tabla de análisis M.
 // Es la transcripción directa de las actividades 4.1 y 4.3 del reporte.
 // (Generado a partir de la gramática y verificado contra un cálculo independiente
-//  de PRIMERO/SIGUIENTE: 85 celdas, 0 conflictos LL(1).)
+//  de PRIMERO/SIGUIENTE: 112 celdas, 0 conflictos LL(1).)
 
 #include <array>
 #include <cstdint>
@@ -45,7 +45,7 @@ struct Produccion
 constexpr Simbolo term(Term t) { return {true, t}; }
 constexpr Simbolo nt(NoTerm n) { return {false, n}; }
 
-/// @brief Producciones. El índice es el número de la producción en el reporte (1-48).
+/// @brief Producciones. El índice es el número de la producción en el reporte (1-54).
 /// El índice 0 es un relleno: en M, el valor 0 significa "celda vacía" (error).
 inline const std::vector<Produccion> PROD = {
     /*  0 */ {NT_PROG, {}}, // relleno, no es una producción real
@@ -83,20 +83,26 @@ inline const std::vector<Produccion> PROD = {
     /* 32 */ {NT_AP, {term(T_MAS), nt(NT_T), nt(NT_AP)}},
     /* 33 */ {NT_AP, {term(T_MENOS), nt(NT_T), nt(NT_AP)}},
     /* 34 */ {NT_AP, {}},
-    /* 35 */ {NT_T, {nt(NT_F), nt(NT_TP)}},
-    /* 36 */ {NT_TP, {term(T_POR), nt(NT_F), nt(NT_TP)}},
-    /* 37 */ {NT_TP, {term(T_DIV), nt(NT_F), nt(NT_TP)}},
-    /* 38 */ {NT_TP, {term(T_MOD), nt(NT_F), nt(NT_TP)}},
-    /* 39 */ {NT_TP, {}},
-    /* 40 */ {NT_F, {term(T_LP), nt(NT_PAR)}},
-    /* 41 */ {NT_F, {term(T_ID)}},
-    /* 42 */ {NT_F, {term(T_NUM)}},
-    /* 43 */ {NT_PAR, {term(T_RP)}},
-    /* 44 */ {NT_PAR, {nt(NT_E), nt(NT_COLA)}},
-    /* 45 */ {NT_COLA, {term(T_RP)}},
-    /* 46 */ {NT_COLA, {term(T_COMA), nt(NT_RESTO)}},
-    /* 47 */ {NT_RESTO, {term(T_RP)}},
-    /* 48 */ {NT_RESTO, {nt(NT_E), nt(NT_COLA)}},
+    /* 35 */ {NT_T, {nt(NT_U), nt(NT_TP)}},
+    /* 36 */ {NT_TP, {term(T_POR), nt(NT_U), nt(NT_TP)}},
+    /* 37 */ {NT_TP, {term(T_DIV), nt(NT_U), nt(NT_TP)}},
+    /* 38 */ {NT_TP, {term(T_IDIV), nt(NT_U), nt(NT_TP)}},
+    /* 39 */ {NT_TP, {term(T_MOD), nt(NT_U), nt(NT_TP)}},
+    /* 40 */ {NT_TP, {}},
+    /* 41 */ {NT_U, {term(T_MENOS), nt(NT_U)}},
+    /* 42 */ {NT_U, {nt(NT_POT)}},
+    /* 43 */ {NT_POT, {nt(NT_F), nt(NT_POTP)}},
+    /* 44 */ {NT_POTP, {term(T_POT), nt(NT_U)}},
+    /* 45 */ {NT_POTP, {}},
+    /* 46 */ {NT_F, {term(T_LP), nt(NT_PAR)}},
+    /* 47 */ {NT_F, {term(T_ID)}},
+    /* 48 */ {NT_F, {term(T_NUM)}},
+    /* 49 */ {NT_PAR, {term(T_RP)}},
+    /* 50 */ {NT_PAR, {nt(NT_E), nt(NT_COLA)}},
+    /* 51 */ {NT_COLA, {term(T_RP)}},
+    /* 52 */ {NT_COLA, {term(T_COMA), nt(NT_RESTO)}},
+    /* 53 */ {NT_RESTO, {term(T_RP)}},
+    /* 54 */ {NT_RESTO, {nt(NT_E), nt(NT_COLA)}},
 };
 
 /// @brief Tabla de análisis: M[no terminal][terminal] = número de producción (0 = error).
@@ -120,7 +126,7 @@ inline TablaM crearTablaM()
     fila(NT_SENT, {T_DEF}, 5);
     fila(NT_VAL, {T_LB}, 6);
     fila(NT_VAL, {T_MAP, T_FILTER, T_REDUCE}, 7);
-    fila(NT_VAL, {T_ID, T_NUM, T_LP}, 8);
+    fila(NT_VAL, {T_ID, T_NUM, T_LP, T_MENOS}, 8);
     fila(NT_LLAM, {T_MAP}, 9);
     fila(NT_LLAM, {T_FILTER}, 10);
     fila(NT_LLAM, {T_REDUCE}, 11);
@@ -136,18 +142,18 @@ inline TablaM crearTablaM()
     fila(NT_I, {T_LB}, 21);
     fila(NT_I, {T_RANGE}, 22);
     fila(NT_I, {T_LP}, 23);
-    fila(NT_L, {T_ID, T_NUM, T_LP}, 24);
+    fila(NT_L, {T_ID, T_NUM, T_LP, T_MENOS}, 24);
     fila(NT_L, {T_RB}, 25);
     fila(NT_LP, {T_COMA}, 26);
     fila(NT_LP, {T_RB}, 27);
-    fila(NT_E, {T_ID, T_NUM, T_LP}, 28);
+    fila(NT_E, {T_ID, T_NUM, T_LP, T_MENOS}, 28);
     fila(NT_EP, {T_REL}, 29);
     fila(NT_EP, {T_RP, T_RB, T_COMA, T_NEWLINE}, 30);
-    fila(NT_A, {T_ID, T_NUM, T_LP}, 31);
+    fila(NT_A, {T_ID, T_NUM, T_LP, T_MENOS}, 31);
     fila(NT_AP, {T_MAS}, 32);
     fila(NT_AP, {T_MENOS}, 33);
     fila(NT_AP, {T_RP, T_RB, T_COMA, T_REL, T_NEWLINE}, 34);
-    fila(NT_T, {T_ID, T_NUM, T_LP}, 35);
+    fila(NT_T, {T_ID, T_NUM, T_LP, T_MENOS}, 35);
     fila(NT_TP, {T_POR}, 36);
     fila(NT_TP, {T_DIV}, 37);
     fila(NT_TP, {T_MOD}, 38);
