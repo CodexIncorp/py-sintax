@@ -151,11 +151,11 @@ inline Resultado analizar(const std::vector<Token> &toks)
             }
             if (X.id == T_EOF)
             {
-                // En la diapositiva 32 el análisis concluye en la última reducción a ε cuando queda $ y $
+                // El análisis concluye en la última reducción a ε cuando queda $ y $
                 R.ok = true;
                 return R;
             }
-            // Emparejar terminal: la columna de acción/salida queda vacía como en la diapositiva 32
+            // Emparejar terminal: la columna de acción/salida queda vacía
             paso("");
             pila.pop_back();
             ++i;
@@ -169,7 +169,7 @@ inline Resultado analizar(const std::vector<Token> &toks)
                       "no se esperaba " + descripcion(a) + "; se esperaba " + esperados(static_cast<NoTerm>(X.id)));
                 return R;
             }
-            // Expandir no terminal: muestra únicamente la producción "A → α"
+            // Derivar no terminal: muestra únicamente la producción "A → α"
             paso(produccionStr(p));
             pila.pop_back();
             for (auto it = PROD[p].der.rbegin(); it != PROD[p].der.rend(); ++it)

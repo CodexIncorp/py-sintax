@@ -1,9 +1,6 @@
 #pragma once
 // gramatica.h — La gramática LL(1) ya sin recursividad por la izquierda:
 // no terminales, producciones numeradas (1-56) y tabla de análisis M.
-// Es la transcripción directa de las actividades 4.1 y 4.3 del reporte.
-// (Generado a partir de la gramática y verificado contra un cálculo independiente
-//  de PRIMERO/SIGUIENTE: 114 celdas, 0 conflictos LL(1).)
 
 #include <array>
 #include <cstdint>
@@ -128,7 +125,7 @@ inline const std::vector<Produccion> PROD = {
 /// @brief Tabla de análisis: M[no terminal][terminal] = número de producción (0 = error).
 using TablaM = std::array<std::array<uint8_t, N_TERM>, N_NOTERM>;
 
-/// @brief Llena M igual que la tabla de la actividad 4.3: cada línea es "no terminal,
+/// @brief Llena M: cada línea es "no terminal,
 /// terminales de entrada, producción a aplicar". Un ε se aplica con SIGUIENTE.
 inline TablaM crearTablaM()
 {
