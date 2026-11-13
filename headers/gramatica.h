@@ -13,37 +13,20 @@
 #include "tokens.h"
 
 /// @brief No terminales. Son las filas de la tabla M.
+
 enum NoTerm : uint8_t
 {
-    NT_PROG,
-    NT_SENT,
-    NT_VAL,
-    NT_LLAM,
-    NT_O,
-    NT_FN,
-    NT_P,
-    NT_PP,
-    NT_I,
-    NT_L,
-    NT_LP,
-    NT_E,
-    NT_EP,
-    NT_A,
-    NT_AP,
-    NT_T,
-    NT_TP,
-    NT_U,
-    NT_POT,
-    NT_POTP,
-    NT_F,
-    NT_PAR,
-    NT_COLA,
-    NT_RESTO,
+    NT_PROG, NT_SENT, NT_VAL, NT_LLAM, NT_O, NT_FN, NT_P, NT_PP, NT_I, NT_L, NT_LP, 
+    NT_E, NT_EP, NT_A, NT_AP, NT_T, NT_TP, NT_F, NT_PAR, NT_COLA, NT_RESTO,
+    NT_BLOQUE, // <-- Nuevo no terminal para BLOQUE_FUNC
     N_NOTERM
 };
 
 inline constexpr const char *NOMBRE_NT[N_NOTERM] = {
-    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", "A", "A'", "T", "T'", "U", "Pot", "Pot'", "F", "Par", "Cola", "Resto"};
+    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", 
+    "A", "A'", "T", "T'", "F", "Par", "Cola", "Resto", 
+    "Bloque" // <-- Nombre para la traza
+};
 
 /// @brief Símbolo de una producción: terminal o no terminal.
 struct Simbolo
@@ -173,24 +156,19 @@ inline TablaM crearTablaM()
     fila(NT_T, {T_ID, T_NUM, T_LP, T_MENOS}, 35);
     fila(NT_TP, {T_POR}, 36);
     fila(NT_TP, {T_DIV}, 37);
-    fila(NT_TP, {T_IDIV}, 38);
-    fila(NT_TP, {T_MOD}, 39);
-    fila(NT_TP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_REL, T_NEWLINE}, 40);
-    fila(NT_U, {T_MENOS}, 41);
-    fila(NT_U, {T_ID, T_NUM, T_LP}, 42);
-    fila(NT_POT, {T_ID, T_NUM, T_LP}, 43);
-    fila(NT_POTP, {T_POT}, 44);
-    fila(NT_POTP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_POR, T_DIV, T_IDIV, T_MOD, T_REL, T_NEWLINE}, 45);
-    fila(NT_F, {T_LP}, 46);
-    fila(NT_F, {T_ID}, 47);
-    fila(NT_F, {T_NUM}, 48);
-    fila(NT_PAR, {T_RP}, 49);
-    fila(NT_PAR, {T_ID, T_NUM, T_LP, T_MENOS}, 50);
-    fila(NT_COLA, {T_RP}, 51);
-    fila(NT_COLA, {T_COMA}, 52);
-    fila(NT_RESTO, {T_RP}, 53);
-    fila(NT_RESTO, {T_ID, T_NUM, T_LP, T_MENOS}, 54);
-
+    fila(NT_TP, {T_MOD}, 38);
+    fila(NT_TP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_REL, T_NEWLINE}, 39);
+    fila(NT_F, {T_LP}, 40);
+    fila(NT_F, {T_ID}, 41);
+    fila(NT_F, {T_NUM}, 42);
+    fila(NT_PAR, {T_RP}, 43);
+    fila(NT_PAR, {T_ID, T_NUM, T_LP}, 44);
+    fila(NT_COLA, {T_RP}, 45);
+    fila(NT_COLA, {T_COMA}, 46);
+    fila(NT_RESTO, {T_RP}, 47);
+    fila(NT_RESTO, {T_ID, T_NUM, T_LP}, 48);
+    fila(NT_BLOQUE, {T_RETURN}, 49);
+    fila(NT_BLOQUE, {T_PASS}, 50);
     return M;
 }
 

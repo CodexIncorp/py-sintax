@@ -19,7 +19,7 @@ struct Paso
     std::size_t linea;  // línea del token de entrada en ese paso
     std::string pila;   // de abajo hacia arriba: "$ Prog" (el tope queda a la derecha)
     std::size_t indice; // índice en el vector de tokens del primer símbolo de ENTRADA
-    std::string accion; // siempre explícita: expandir / emparejar / aceptar / error
+    std::string accion; // formato diapositiva 32: "A → α" al expandir, vacío al emparejar
 };
 
 enum class TipoError
@@ -103,25 +103,6 @@ namespace analisis_impl
             return "'" + t.lexema + "'";
         }
     }
-
-    /// Texto de la acción cuando un terminal del tope coincide con la entrada.
-    inline std::string emparejar(const Token &t)
-    {
-        switch (t.tipo)
-        {
-        case T_ID:
-        case T_NUM:
-        case T_REL:
-            return std::string("emparejar ") + NOMBRE_T[t.tipo] + " '" + t.lexema + "'";
-        case T_NEWLINE:
-        case T_INDENT:
-        case T_DEDENT:
-        case T_EOF:
-            return std::string("emparejar ") + NOMBRE_T[t.tipo];
-        default:
-            return std::string("emparejar '") + NOMBRE_T[t.tipo] + "'";
-        }
-    }
 } // namespace analisis_impl
 
 /// @brief Analiza la secuencia de tokens (el último debe ser T_EOF).
@@ -170,11 +151,12 @@ inline Resultado analizar(const std::vector<Token> &toks)
             }
             if (X.id == T_EOF)
             {
-                paso("aceptar: el archivo pertenece al lenguaje");
+                // En la diapositiva 32 el análisis concluye en la última reducción a ε cuando queda $ y $
                 R.ok = true;
                 return R;
             }
-            paso(emparejar(a));
+            // Emparejar terminal: la columna de acción/salida queda vacía como en la diapositiva 32
+            paso("");
             pila.pop_back();
             ++i;
         }
@@ -187,7 +169,8 @@ inline Resultado analizar(const std::vector<Token> &toks)
                       "no se esperaba " + descripcion(a) + "; se esperaba " + esperados(static_cast<NoTerm>(X.id)));
                 return R;
             }
-            paso("expandir " + produccionStr(p) + " (prod. " + std::to_string(p) + ")");
+            // Expandir no terminal: muestra únicamente la producción "A → α"
+            paso(produccionStr(p));
             pila.pop_back();
             for (auto it = PROD[p].der.rbegin(); it != PROD[p].der.rend(); ++it)
                 pila.push_back(*it); // se apila de derecha a izquierda
