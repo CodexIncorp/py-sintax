@@ -66,8 +66,7 @@ El código es modular y *header-only* en su lógica interna, separando el vocabu
 │   ├── gramatica.h         # 25 no terminales, 56 producciones LL(1) y tabla predictiva M
 │   ├── parser.h            # Algoritmo predictivo no recursivo con pila explícita
 │   └── informe.h           # Exportación de traza CSV (RFC 4180), errores en consola y tabla M
-├── output/                 # Binarios compilados
-│   └── main
+
 ├── main.cpp                # Punto de entrada y CLI
 └── README.md
 ```
@@ -244,9 +243,8 @@ El directorio `casos/` incluye los scripts de validación del analizador:
 
 ## 7. Créditos
 
-Proyecto académico desarrollado para la asignatura de **Lenguajes y Autómatas I** en el **Tecnológico Nacional de México — Instituto Tecnológico de Tuxtla Gutiérrez** (Ingeniería en Sistemas Computacionales).
 
-* **Autores:**
+* **Equipo de desarrollo:**
   * Balderas Osorio Rafael de Jesús
   * Morales Jiménez Alexis Emiliano
   * Soancatl Niño Adrik Said
