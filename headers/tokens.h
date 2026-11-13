@@ -17,7 +17,7 @@ enum Term : uint8_t
     T_RANGE,
     T_DEF,
     T_RETURN,
-    T_PASS,    // Agregado por el documento para "BLOQUE_FUNC -> pass"
+    T_PASS, // 'pass' (cuerpo de funcion vacio)
     T_ID,
     T_NUM,
     T_LP,      // (
@@ -35,9 +35,9 @@ enum Term : uint8_t
     T_MOD,     // %
     T_POT,     // **
     T_REL,     // == != < > <= >=
-    T_NEWLINE, // fin de una línea lógica (\n)
-    T_INDENT,  // aumento de sangría (\t)
-    T_DEDENT,  // disminución de sangría
+    T_NEWLINE, // fin de una linea logica
+    T_INDENT,  // aumento de sangria
+    T_DEDENT,  // disminucion de sangria
     T_EOF,     // $
     T_ERROR,   // error lexico (lo produce el lexer; no esta en la gramatica)
     N_TERM
@@ -46,7 +46,7 @@ enum Term : uint8_t
 /// @brief Nombre de cada terminal tal como aparece en la traza y en el reporte.
 inline constexpr const char *NOMBRE_T[N_TERM] = {
     "map", "filter", "reduce", "lambda", "range", "def", "return", "pass", "id", "num",
-    "(", ")", "[", "]", ",", ":", "=", "+", "-", "*", "/", "%", "rel",
+    "(", ")", "[", "]", ",", ":", "=", "+", "-", "*", "/", "//", "%", "**", "rel",
     "NEWLINE", "INDENT", "DEDENT", "$", "ERROR"};
 
 /// @brief Descripcion para mensajes de error dirigidos al usuario.

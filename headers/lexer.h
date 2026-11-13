@@ -200,7 +200,38 @@ namespace lex_impl
 
     inline constexpr auto CLASE = crearClases();
 
-/// Palabras reservadas: un identificador con este lexema cambia de tipo.
+    /// Describe un caracter UTF-8 no ASCII como "U+00E9" para no imprimir bytes que la consola
+    /// podria no reconocer.
+    inline std::string codigoUnicode(std::string_view s)
+    {
+        const unsigned char b0 = static_cast<unsigned char>(s[0]);
+        std::size_t extra = 0;
+        uint32_t cp = 0;
+        if (b0 >= 0xF0 && b0 < 0xF8)
+        {
+            cp = b0 & 0x07;
+            extra = 3;
+        }
+        else if (b0 >= 0xE0)
+        {
+            cp = b0 & 0x0F;
+            extra = 2;
+        }
+        else if (b0 >= 0xC0)
+        {
+            cp = b0 & 0x1F;
+            extra = 1;
+        }
+        if (extra == 0 || s.size() != extra + 1)
+            return "byte invalido";
+        for (std::size_t k = 1; k <= extra; ++k)
+            cp = (cp << 6) | (static_cast<unsigned char>(s[k]) & 0x3F);
+        char buf[16];
+        std::snprintf(buf, sizeof buf, "U+%04X", static_cast<unsigned>(cp));
+        return buf;
+    }
+
+    /// Palabras reservadas: un identificador con este lexema cambia de tipo.
     inline constexpr std::array<std::pair<std::string_view, Term>, 8> RESERVADAS = {{
         {"map", T_MAP},
         {"filter", T_FILTER},
@@ -209,7 +240,7 @@ namespace lex_impl
         {"range", T_RANGE},
         {"def", T_DEF},
         {"return", T_RETURN},
-        {"pass", T_PASS}, // <-- Agregado
+        {"pass", T_PASS},
     }};
 } // namespace lex_impl
 

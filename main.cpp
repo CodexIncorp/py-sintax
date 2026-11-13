@@ -4,7 +4,7 @@
 // Flujo:  archivo .py  →  Scanner (lexer.h)  →  analizar (parser.h)  →  informe.h
 //
 // Compilar:  (Linux) g++ -std=c++17 -Wall -Wextra -o ./build/parser main.cpp
-//           (Windows) g++ -o ./build/parser main.cpp                
+//           (Windows) g++ -o ./build/parser main.cpp
 // Usar:      ./build/parser programa.py [traza.csv]   (si no se da el .csv: programa.csv)
 //            ./build/parser --entrada-completa programa.py
 //                  la columna ENTRADA del CSV muestra todo lo que falta por leer (por defecto,

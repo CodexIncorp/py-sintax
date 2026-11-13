@@ -1,9 +1,9 @@
 #pragma once
 // gramatica.h — La gramática LL(1) ya sin recursividad por la izquierda:
-// no terminales, producciones numeradas (1-54) y tabla de análisis M.
+// no terminales, producciones numeradas (1-56) y tabla de análisis M.
 // Es la transcripción directa de las actividades 4.1 y 4.3 del reporte.
 // (Generado a partir de la gramática y verificado contra un cálculo independiente
-//  de PRIMERO/SIGUIENTE: 112 celdas, 0 conflictos LL(1).)
+//  de PRIMERO/SIGUIENTE: 114 celdas, 0 conflictos LL(1).)
 
 #include <array>
 #include <cstdint>
@@ -13,20 +13,38 @@
 #include "tokens.h"
 
 /// @brief No terminales. Son las filas de la tabla M.
-
 enum NoTerm : uint8_t
 {
-    NT_PROG, NT_SENT, NT_VAL, NT_LLAM, NT_O, NT_FN, NT_P, NT_PP, NT_I, NT_L, NT_LP, 
-    NT_E, NT_EP, NT_A, NT_AP, NT_T, NT_TP, NT_F, NT_PAR, NT_COLA, NT_RESTO,
-    NT_BLOQUE, // <-- Nuevo no terminal para BLOQUE_FUNC
+    NT_PROG,
+    NT_SENT,
+    NT_VAL,
+    NT_LLAM,
+    NT_O,
+    NT_FN,
+    NT_P,
+    NT_PP,
+    NT_I,
+    NT_L,
+    NT_LP,
+    NT_E,
+    NT_EP,
+    NT_A,
+    NT_AP,
+    NT_T,
+    NT_TP,
+    NT_U,
+    NT_POT,
+    NT_POTP,
+    NT_F,
+    NT_PAR,
+    NT_COLA,
+    NT_RESTO,
+    NT_BLOQUE, // cuerpo de def: return E | pass
     N_NOTERM
 };
 
 inline constexpr const char *NOMBRE_NT[N_NOTERM] = {
-    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", 
-    "A", "A'", "T", "T'", "F", "Par", "Cola", "Resto", 
-    "Bloque" // <-- Nombre para la traza
-};
+    "Prog", "Sent", "Val", "Llam", "O", "Fn", "P", "P'", "I", "L", "L'", "E", "E'", "A", "A'", "T", "T'", "U", "Pot", "Pot'", "F", "Par", "Cola", "Resto", "Bloque"};
 
 /// @brief Símbolo de una producción: terminal o no terminal.
 struct Simbolo
@@ -45,7 +63,7 @@ struct Produccion
 constexpr Simbolo term(Term t) { return {true, t}; }
 constexpr Simbolo nt(NoTerm n) { return {false, n}; }
 
-/// @brief Producciones. El índice es el número de la producción en el reporte (1-54).
+/// @brief Producciones. El índice es el número de la producción en el reporte (1-56).
 /// El índice 0 es un relleno: en M, el valor 0 significa "celda vacía" (error).
 inline const std::vector<Produccion> PROD = {
     /*  0 */ {NT_PROG, {}}, // relleno, no es una producción real
@@ -53,7 +71,7 @@ inline const std::vector<Produccion> PROD = {
     /*  2 */ {NT_PROG, {}},
     /*  3 */ {NT_SENT, {term(T_ID), term(T_ASIG), nt(NT_VAL), term(T_NEWLINE)}},
     /*  4 */ {NT_SENT, {nt(NT_LLAM), term(T_NEWLINE)}},
-    /*  5 */ {NT_SENT, {term(T_DEF), term(T_ID), term(T_LP), nt(NT_P), term(T_RP), term(T_DOSP), term(T_NEWLINE), term(T_INDENT), term(T_RETURN), nt(NT_E), term(T_NEWLINE), term(T_DEDENT)}},
+    /*  5 */ {NT_SENT, {term(T_DEF), term(T_ID), term(T_LP), nt(NT_P), term(T_RP), term(T_DOSP), term(T_NEWLINE), term(T_INDENT), nt(NT_BLOQUE), term(T_NEWLINE), term(T_DEDENT)}},
     /*  6 */ {NT_VAL, {term(T_LB), nt(NT_L), term(T_RB)}},
     /*  7 */ {NT_VAL, {nt(NT_LLAM)}},
     /*  8 */ {NT_VAL, {nt(NT_E)}},
@@ -103,6 +121,8 @@ inline const std::vector<Produccion> PROD = {
     /* 52 */ {NT_COLA, {term(T_COMA), nt(NT_RESTO)}},
     /* 53 */ {NT_RESTO, {term(T_RP)}},
     /* 54 */ {NT_RESTO, {nt(NT_E), nt(NT_COLA)}},
+    /* 55 */ {NT_BLOQUE, {term(T_RETURN), nt(NT_E)}},
+    /* 56 */ {NT_BLOQUE, {term(T_PASS)}},
 };
 
 /// @brief Tabla de análisis: M[no terminal][terminal] = número de producción (0 = error).
@@ -156,19 +176,26 @@ inline TablaM crearTablaM()
     fila(NT_T, {T_ID, T_NUM, T_LP, T_MENOS}, 35);
     fila(NT_TP, {T_POR}, 36);
     fila(NT_TP, {T_DIV}, 37);
-    fila(NT_TP, {T_MOD}, 38);
-    fila(NT_TP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_REL, T_NEWLINE}, 39);
-    fila(NT_F, {T_LP}, 40);
-    fila(NT_F, {T_ID}, 41);
-    fila(NT_F, {T_NUM}, 42);
-    fila(NT_PAR, {T_RP}, 43);
-    fila(NT_PAR, {T_ID, T_NUM, T_LP}, 44);
-    fila(NT_COLA, {T_RP}, 45);
-    fila(NT_COLA, {T_COMA}, 46);
-    fila(NT_RESTO, {T_RP}, 47);
-    fila(NT_RESTO, {T_ID, T_NUM, T_LP}, 48);
-    fila(NT_BLOQUE, {T_RETURN}, 49);
-    fila(NT_BLOQUE, {T_PASS}, 50);
+    fila(NT_TP, {T_IDIV}, 38);
+    fila(NT_TP, {T_MOD}, 39);
+    fila(NT_TP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_REL, T_NEWLINE}, 40);
+    fila(NT_U, {T_MENOS}, 41);
+    fila(NT_U, {T_ID, T_NUM, T_LP}, 42);
+    fila(NT_POT, {T_ID, T_NUM, T_LP}, 43);
+    fila(NT_POTP, {T_POT}, 44);
+    fila(NT_POTP, {T_RP, T_RB, T_COMA, T_MAS, T_MENOS, T_POR, T_DIV, T_IDIV, T_MOD, T_REL, T_NEWLINE}, 45);
+    fila(NT_F, {T_LP}, 46);
+    fila(NT_F, {T_ID}, 47);
+    fila(NT_F, {T_NUM}, 48);
+    fila(NT_PAR, {T_RP}, 49);
+    fila(NT_PAR, {T_ID, T_NUM, T_LP, T_MENOS}, 50);
+    fila(NT_COLA, {T_RP}, 51);
+    fila(NT_COLA, {T_COMA}, 52);
+    fila(NT_RESTO, {T_RP}, 53);
+    fila(NT_RESTO, {T_ID, T_NUM, T_LP, T_MENOS}, 54);
+    fila(NT_BLOQUE, {T_RETURN}, 55);
+    fila(NT_BLOQUE, {T_PASS}, 56);
+
     return M;
 }
 
